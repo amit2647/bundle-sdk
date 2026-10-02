@@ -1,0 +1,24 @@
+rules:
+  - key: itr
+    service: itr
+    name: Income tax return
+    revision: 1
+    kind: periodic
+    frequency: yearly
+    condition: { engaged: tax_audit }
+    schedule: { date: "10-31" }
+    else: { date: "07-31" }
+  - key: statutory_audit_report
+    service: statutory_audit
+    name: Statutory audit report
+    revision: 1
+    kind: periodic
+    frequency: yearly
+    schedule: { date: "09-30" }
+  - key: agm_filing
+    service: statutory_audit
+    name: Filing after AGM
+    revision: 1
+    kind: relative
+    relativeTo: engagement.attributes.agm_on
+    offsetDays: 30

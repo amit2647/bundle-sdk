@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "constitution": { "type": "string", "enum": ["proprietorship", "partnership", "pvt_ltd"] },
+    "client_type": { "type": "string", "enum": ["regular", "one_time"], "default": "regular" },
+    "trust_reg_no": { "type": "string", "maxLength": 50 }
+  },
+  "required": ["constitution"],
+  "allOf": [
+    {
+      "if": { "properties": { "constitution": { "const": "pvt_ltd" } } },
+      "then": { "required": ["client_type"] }
+    }
+  ]
+}

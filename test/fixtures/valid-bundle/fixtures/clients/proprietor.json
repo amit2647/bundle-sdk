@@ -1,0 +1,6 @@
+{
+  "name": "R. Sharma",
+  "attributes": { "constitution": "proprietorship" },
+  "engaged": ["itr", "gst_returns"],
+  "engagement": { "type": "annual", "period": "2025-26" }
+}

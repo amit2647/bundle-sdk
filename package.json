@@ -1,0 +1,31 @@
+{
+    "name": "bundle-sdk",
+    "version": "0.1.0",
+    "description": "The profession bundle contract: manifest schema, bundle-lint, and the condition, schedule and template engines shared by the installer and the capability services",
+    "main": "src/index.js",
+    "bin": {
+        "bundle-lint": "bin/bundle-lint.js"
+    },
+    "files": [
+        "bin",
+        "contract",
+        "src"
+    ],
+    "scripts": {
+        "test": "node --test",
+        "lint": "eslint .",
+        "coverage": "node --test --experimental-test-coverage"
+    },
+    "dependencies": {
+        "ajv": "^8.20.0",
+        "ajv-formats": "^3.0.1",
+        "handlebars": "^4.7.9",
+        "js-yaml": "^5.4.2",
+        "semver": "^7.8.5"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.0",
+        "eslint": "^9.39.0",
+        "globals": "^17.12.0"
+    }
+}

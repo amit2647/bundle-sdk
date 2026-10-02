@@ -1,0 +1,479 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnicore.local/bundle-contract/v1/manifest.schema.json",
+  "title": "Profession bundle manifest, contract v1 (resolved form)",
+  "description": "The manifest after loading: every file a bundle.yaml references has been read in. Shape only — cross-references (a rule's service exists, a role's permissions exist) are checked by bundle-lint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["key", "namespace", "version", "contract", "name", "requires", "vocabulary", "profiles"],
+  "properties": {
+    "key": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,59}$" },
+    "namespace": {
+      "description": "Prefix for this bundle's own permissions and events, e.g. ca for ca.udin.manage.",
+      "type": "string",
+      "pattern": "^[a-z]{2,20}$"
+    },
+    "version": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$" },
+    "contract": { "const": 1 },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "type": "string", "maxLength": 1000 },
+
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilities"],
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["engagements", "obligations", "documents", "vault"] }
+        }
+      }
+    },
+
+    "vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["client", "engagement", "period"],
+      "properties": {
+        "client": { "$ref": "#/$defs/term" },
+        "engagement": { "$ref": "#/$defs/term" },
+        "period": { "$ref": "#/$defs/term" },
+        "obligation": { "$ref": "#/$defs/term" },
+        "document": { "$ref": "#/$defs/term" }
+      }
+    },
+
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["client"],
+      "properties": {
+        "client": { "$ref": "#/$defs/profile" },
+        "lead": { "$ref": "#/$defs/profile" },
+        "organization": { "$ref": "#/$defs/profile" },
+        "professional": { "$ref": "#/$defs/profile" },
+        "engagement": {
+          "description": "One profile per engagement type key.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/itemKey" },
+          "additionalProperties": { "$ref": "#/$defs/profile" }
+        }
+      }
+    },
+
+    "identifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "label", "unique"],
+        "properties": {
+          "type": { "$ref": "#/$defs/itemKey" },
+          "label": { "$ref": "#/$defs/text" },
+          "pattern": { "type": "string", "maxLength": 200 },
+          "unique": { "type": "boolean" },
+          "appliesTo": { "enum": ["client", "person"], "default": "client" }
+        }
+      }
+    },
+
+    "peopleRoles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "label": { "$ref": "#/$defs/text" },
+          "labelWhen": {
+            "description": "A different label when a condition on the client holds, e.g. Karta for a HUF.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["when", "label"],
+              "properties": {
+                "when": { "$ref": "#/$defs/condition" },
+                "label": { "$ref": "#/$defs/text" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "pipeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label", "status"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "label": { "$ref": "#/$defs/text" },
+          "status": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+
+    "engagementTypes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "periodKind"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "name": { "$ref": "#/$defs/text" },
+          "periodKind": { "enum": ["financial_year", "calendar_year", "none"] },
+          "periodStartMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "label"],
+              "properties": {
+                "key": { "$ref": "#/$defs/itemKey" },
+                "label": { "$ref": "#/$defs/text" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["services"],
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "label"],
+            "properties": {
+              "key": { "$ref": "#/$defs/itemKey" },
+              "label": { "$ref": "#/$defs/text" }
+            }
+          }
+        },
+        "services": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "name"],
+            "properties": {
+              "key": { "$ref": "#/$defs/itemKey" },
+              "name": { "type": "string", "minLength": 1, "maxLength": 150 },
+              "group": { "$ref": "#/$defs/itemKey" },
+              "description": { "type": "string", "maxLength": 1000 }
+            }
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "name", "services"],
+            "properties": {
+              "key": { "$ref": "#/$defs/itemKey" },
+              "name": { "type": "string", "minLength": 1, "maxLength": 150 },
+              "description": { "type": "string", "maxLength": 1000 },
+              "services": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/itemKey" } }
+            }
+          }
+        }
+      }
+    },
+
+    "obligations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rule" }
+    },
+
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "revision", "body", "fields"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "name": { "$ref": "#/$defs/text" },
+          "revision": { "type": "integer", "minimum": 1 },
+          "badge": { "type": "string", "maxLength": 40 },
+          "enabledWhen": { "$ref": "#/$defs/condition" },
+          "body": { "type": "string", "minLength": 1 },
+          "fields": { "$ref": "#/$defs/jsonSchema" },
+          "ui": { "type": "object" }
+        }
+      }
+    },
+
+    "vault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["portals"],
+      "properties": {
+        "consentFileCategory": { "$ref": "#/$defs/itemKey" },
+        "portals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "name", "fields"],
+            "properties": {
+              "key": { "$ref": "#/$defs/itemKey" },
+              "name": { "$ref": "#/$defs/text" },
+              "url": { "type": "string", "pattern": "^https://" },
+              "enabledWhen": { "$ref": "#/$defs/condition" },
+              "fields": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["key", "label", "secret"],
+                  "properties": {
+                    "key": { "$ref": "#/$defs/itemKey" },
+                    "label": { "$ref": "#/$defs/text" },
+                    "secret": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "name"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[a-z]{2,20}\\.[a-z][a-z0-9_.]{1,78}$" },
+          "name": { "$ref": "#/$defs/text" },
+          "description": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "permissions"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "name": { "$ref": "#/$defs/text" },
+          "description": { "type": "string", "maxLength": 500 },
+          "permissions": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+        }
+      }
+    },
+
+    "email": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "trigger", "subject", "body"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 150 },
+          "trigger": { "enum": ["engagement.created", "obligation.due_soon", "obligation.overdue", "lead.created", "lead.converted", "customer.created"] },
+          "subject": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "body": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "dashboard": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label", "permission", "query"],
+        "properties": {
+          "key": { "$ref": "#/$defs/itemKey" },
+          "label": { "$ref": "#/$defs/text" },
+          "permission": { "type": "string" },
+          "query": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "$ref": "#/$defs/itemKey" },
+              "params": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+
+    "help": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "title", "permission", "body"],
+        "properties": {
+          "path": { "type": "string" },
+          "title": { "$ref": "#/$defs/text" },
+          "permission": { "type": "string" },
+          "body": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "upgrades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "steps"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["op", "entity", "from", "to"],
+                  "properties": { "op": { "const": "renameField" }, "entity": { "$ref": "#/$defs/entity" }, "from": { "type": "string" }, "to": { "type": "string" } }
+                },
+                {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["op", "entity", "field", "value"],
+                  "properties": { "op": { "const": "setDefault" }, "entity": { "$ref": "#/$defs/entity" }, "field": { "type": "string" }, "value": {} }
+                },
+                {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["op", "entity", "field", "map"],
+                  "properties": { "op": { "const": "mapValue" }, "entity": { "$ref": "#/$defs/entity" }, "field": { "type": "string" }, "map": { "type": "object" } }
+                },
+                {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["op", "section", "key"],
+                  "properties": { "op": { "const": "retireItem" }, "section": { "$ref": "#/$defs/section" }, "key": { "$ref": "#/$defs/itemKey" } }
+                },
+                {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["op", "section", "from", "to"],
+                  "properties": { "op": { "const": "renameKey" }, "section": { "$ref": "#/$defs/section" }, "from": { "$ref": "#/$defs/itemKey" }, "to": { "$ref": "#/$defs/itemKey" } }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "itemKey": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,59}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "term": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["one", "many"],
+      "properties": { "one": { "$ref": "#/$defs/text" }, "many": { "$ref": "#/$defs/text" } }
+    },
+    "entity": { "enum": ["client", "lead", "engagement", "organization", "professional"] },
+    "section": { "enum": ["catalog", "obligations", "documents", "vault", "roles", "email", "dashboard", "engagementTypes", "identifiers", "peopleRoles", "pipeline"] },
+    "condition": {
+      "description": "A JSONLogic-subset expression; its operators are checked by bundle-lint.",
+      "type": ["object", "boolean"]
+    },
+    "jsonSchema": {
+      "description": "A JSON Schema for a set of fields; its keywords are checked by bundle-lint.",
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "const": "object" } }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "schema"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "schema": { "$ref": "#/$defs/jsonSchema" },
+        "ui": { "type": "object" }
+      }
+    },
+    "monthDay": { "type": "string", "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$" },
+    "schedule": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["day"],
+          "properties": { "day": { "type": "integer", "minimum": 1, "maximum": 31 }, "offsetMonths": { "type": "integer", "minimum": 0, "maximum": 24 } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["date"],
+          "properties": { "date": { "$ref": "#/$defs/monthDay" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["dates"],
+          "properties": {
+            "dates": {
+              "type": "object", "additionalProperties": false, "required": ["Q1", "Q2", "Q3", "Q4"],
+              "properties": { "Q1": { "$ref": "#/$defs/monthDay" }, "Q2": { "$ref": "#/$defs/monthDay" }, "Q3": { "$ref": "#/$defs/monthDay" }, "Q4": { "$ref": "#/$defs/monthDay" } }
+            }
+          }
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "service", "name", "revision", "kind"],
+      "properties": {
+        "key": { "$ref": "#/$defs/itemKey" },
+        "service": { "$ref": "#/$defs/itemKey" },
+        "name": { "$ref": "#/$defs/text" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["periodic", "relative", "manual"] },
+        "frequency": { "enum": ["monthly", "quarterly", "yearly"] },
+        "schedule": { "$ref": "#/$defs/schedule" },
+        "condition": { "$ref": "#/$defs/condition" },
+        "else": { "$ref": "#/$defs/schedule" },
+        "relativeTo": { "type": "string", "pattern": "^(client|engagement)\\.[a-zA-Z0-9_.]+$" },
+        "offsetDays": { "type": "integer", "minimum": -3660, "maximum": 3660 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "periodic" } } },
+          "then": { "required": ["frequency", "schedule"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "relative" } } },
+          "then": { "required": ["relativeTo"], "not": { "required": ["schedule"] } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "manual" } } },
+          "then": { "not": { "anyOf": [{ "required": ["schedule"] }, { "required": ["relativeTo"] }] } }
+        },
+        {
+          "if": { "required": ["else"] },
+          "then": { "required": ["condition"] }
+        }
+      ]
+    }
+  }
+}

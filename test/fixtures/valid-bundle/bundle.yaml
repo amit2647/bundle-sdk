@@ -1,0 +1,48 @@
+# A small bundle that exercises every section of contract v1. The tests lint
+# it as-is (must pass) and in mutated copies (each must fail for one reason).
+key: test-practice
+namespace: tp
+version: 1.0.0
+contract: 1
+name: Test Practice
+description: Fixture bundle for bundle-sdk's own tests.
+requires:
+  capabilities: [engagements, obligations, documents, vault]
+vocabulary:
+  client: { one: Client, many: Clients }
+  engagement: { one: Engagement, many: Engagements }
+  period: { one: Financial year, many: Financial years }
+profiles:
+  client: { version: 1, schema: schemas/client.json, ui: ui/client.ui.json }
+  engagement:
+    annual: { version: 1, schema: schemas/engagement-annual.json }
+identifiers:
+  - { type: pan, label: PAN, pattern: "^[A-Z]{5}[0-9]{4}[A-Z]$", unique: true }
+  - { type: cin, label: CIN, unique: true }
+peopleRoles:
+  - key: director
+    label: Director
+    labelWhen:
+      - when: { "==": [{ var: client.attributes.constitution }, partnership] }
+        label: Partner
+pipeline:
+  - { key: lead, label: Leads, status: New }
+  - { key: discussion, label: In Discussion, status: In Discussion }
+engagementTypes:
+  - key: annual
+    name: Annual engagement
+    periodKind: financial_year
+    periodStartMonth: 4
+    stages: [{ key: planning, label: Planning }, { key: fieldwork, label: Fieldwork }]
+catalog: catalog.yaml
+obligations: rules/
+documents: documents/
+vault:
+  consentFileCategory: consent_poa_signed
+  portals: portals.yaml
+permissions:
+  - { code: tp.udin.manage, name: Manage UDINs }
+roles: roles.yaml
+email: email/
+dashboard: cards.yaml
+help: knowledge/

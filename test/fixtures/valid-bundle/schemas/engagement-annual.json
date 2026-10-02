@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "agm_on": { "type": "string", "format": "date" },
+    "previous_auditor": {
+      "type": "object",
+      "properties": { "firm": { "type": "string" }, "frn": { "type": "string" } }
+    }
+  }
+}

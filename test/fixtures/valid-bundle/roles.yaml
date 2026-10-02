@@ -1,0 +1,7 @@
+roles:
+  - key: partner
+    name: Partner
+    permissions: [customers.read, customers.update, profiles.read, profiles.update, obligations.read, obligations.update, obligations.rules, vault.read, vault.reveal, tp.udin.manage]
+  - key: assistant
+    name: Article Assistant
+    permissions: [profiles.read, obligations.read, obligations.update, documents.read, files.upload]

@@ -1,0 +1,1 @@
+{ "ui:order": ["constitution", "client_type", "trust_reg_no"], "constitution": { "ui:widget": "select" } }

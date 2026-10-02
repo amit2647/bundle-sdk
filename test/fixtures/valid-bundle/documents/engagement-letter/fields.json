@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {
+    "reference": { "type": "string", "title": "Reference number" },
+    "fee": { "type": "number", "minimum": 0, "title": "Audit fee" }
+  },
+  "required": ["reference"]
+}

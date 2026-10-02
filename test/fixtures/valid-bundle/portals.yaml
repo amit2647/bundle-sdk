@@ -1,0 +1,8 @@
+portals:
+  - key: gst
+    name: GST portal
+    url: https://www.gst.gov.in
+    enabledWhen: { engaged: gst_returns }
+    fields:
+      - { key: username, label: Username, secret: false }
+      - { key: password, label: Password, secret: true }

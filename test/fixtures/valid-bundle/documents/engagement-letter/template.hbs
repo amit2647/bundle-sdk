@@ -1,0 +1,7 @@
+<p>{{date today}}</p>
+<p>To the Board of Directors, {{client.name}}</p>
+<p>Ref: {{fields.reference}}</p>
+{{#if (inList client.attributes.constitution "pvt_ltd")}}<p>Companies Act, 2013 applies.</p>{{/if}}
+<p>Fees: {{money fields.fee}} for the year ending {{date (fyEnd engagement.period_label)}}.</p>
+{{#each client.people}}<p>{{name}}</p>{{/each}}
+<p>{{firm.name}} · {{signatory.name}}</p>

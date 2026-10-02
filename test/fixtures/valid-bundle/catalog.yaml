@@ -1,0 +1,12 @@
+groups:
+  - { key: audit, label: Audit }
+  - { key: gst, label: GST }
+  - { key: compliance, label: Compliance }
+services:
+  - { key: statutory_audit, name: Statutory Audit, group: audit }
+  - { key: tax_audit, name: Tax Audit, group: audit }
+  - { key: gst_returns, name: GST Returns, group: gst }
+  - { key: tds, name: TDS, group: compliance }
+  - { key: itr, name: Income Tax Return, group: compliance }
+packages:
+  - { key: company_annual, name: Company annual compliance, services: [statutory_audit, itr, tds] }

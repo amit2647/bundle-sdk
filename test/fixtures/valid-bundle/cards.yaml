@@ -1,0 +1,2 @@
+cards:
+  - { key: overdue, label: Overdue, permission: obligations.read, query: { name: obligations_by_state, params: { state: overdue } } }

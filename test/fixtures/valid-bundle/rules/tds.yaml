@@ -1,0 +1,8 @@
+rules:
+  - key: tds_return
+    service: tds
+    name: TDS return
+    revision: 1
+    kind: periodic
+    frequency: quarterly
+    schedule: { dates: { Q1: "07-31", Q2: "10-31", Q3: "01-31", Q4: "05-31" } }

@@ -1,0 +1,3 @@
+rules:
+  - { key: gstr1, service: gst_returns, name: GSTR-1, revision: 1, kind: periodic, frequency: monthly, schedule: { day: 11, offsetMonths: 1 } }
+  - { key: gstr3b, service: gst_returns, name: GSTR-3B, revision: 1, kind: periodic, frequency: monthly, schedule: { day: 20, offsetMonths: 1 } }

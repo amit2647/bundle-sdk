@@ -1,0 +1,5 @@
+key: obligation_due_soon
+name: Deadline due soon
+trigger: obligation.due_soon
+subject: "{{obligation.title}} is due on {{obligation.due_on}}"
+body: "{{client.name}}: {{obligation.title}} is due on {{obligation.due_on}}. — {{organization.name}}"
