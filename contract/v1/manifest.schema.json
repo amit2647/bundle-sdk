@@ -53,6 +53,10 @@
         "lead": { "$ref": "#/$defs/profile" },
         "organization": { "$ref": "#/$defs/profile" },
         "professional": { "$ref": "#/$defs/profile" },
+        "person": {
+          "description": "Fields of a person on a client (director, partner, signatory).",
+          "$ref": "#/$defs/profile"
+        },
         "engagement": {
           "description": "One profile per engagement type key.",
           "type": "object",
@@ -403,7 +407,7 @@
       "required": ["one", "many"],
       "properties": { "one": { "$ref": "#/$defs/text" }, "many": { "$ref": "#/$defs/text" } }
     },
-    "entity": { "enum": ["client", "lead", "engagement", "organization", "professional"] },
+    "entity": { "enum": ["client", "lead", "engagement", "organization", "professional", "person"] },
     "section": { "enum": ["catalog", "obligations", "documents", "vault", "roles", "email", "dashboard", "engagementTypes", "identifiers", "peopleRoles", "pipeline"] },
     "condition": {
       "description": "A JSONLogic-subset expression; its operators are checked by bundle-lint.",

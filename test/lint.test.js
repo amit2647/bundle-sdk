@@ -196,6 +196,18 @@ describe("field schemas and forms", () => {
     assertError((b) => b.json("ui/client.ui.json", (u) => { u.turnover = { "ui:widget": "text" }; }), /profiles.client.ui: "turnover" is not a field/);
   });
 
+  test("a person profile is accepted and its schema checked", () => {
+    const ok = lintBundle(variant((b) => b.yaml("bundle.yaml", (m) => {
+      m.profiles.person = { version: 1, schema: { type: "object", properties: { din: { type: "string" } } } };
+    })));
+
+    assert.deepEqual(ok.errors, []);
+    assertError(
+      (b) => b.yaml("bundle.yaml", (m) => { m.profiles.person = { version: 1, schema: { type: "object", properties: { din: { type: "string", mask: true } } } }; }),
+      /profiles.person.schema.properties.din: keyword "mask" is not allowed/,
+    );
+  });
+
   test("an engagement profile for an undeclared type", () => {
     assertError((b) => b.yaml("bundle.yaml", (m) => { m.profiles.engagement.monthly = m.profiles.engagement.annual; }), /there is no engagement type "monthly"/);
   });
