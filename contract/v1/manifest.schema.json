@@ -73,7 +73,15 @@
           "label": { "$ref": "#/$defs/text" },
           "pattern": { "type": "string", "maxLength": 200 },
           "unique": { "type": "boolean" },
-          "appliesTo": { "enum": ["client", "person"], "default": "client" }
+          "appliesTo": { "enum": ["client", "person"], "default": "client" },
+          "shownWhen": {
+            "description": "Ask for this identifier only when the condition holds for the client (e.g. CIN for companies). Absent: always asked.",
+            "$ref": "#/$defs/condition"
+          },
+          "requiredWhen": {
+            "description": "The identifier must be given when the condition holds (e.g. CIN for a private or public limited company). Absent: optional.",
+            "$ref": "#/$defs/condition"
+          }
         }
       }
     },

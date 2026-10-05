@@ -160,6 +160,22 @@ describe("conditions", () => {
   });
 });
 
+describe("identifier conditions", () => {
+  test("an identifier condition reading an unknown client field", () => {
+    assertError(
+      (b) => b.yaml("bundle.yaml", (m) => { m.identifiers[1].requiredWhen = { filled: { var: "client.attributes.turnover" } }; }),
+      /identifiers.cin.requiredWhen: "client.attributes.turnover" — "turnover" is not in the client profile schema/,
+    );
+  });
+
+  test("a person identifier cannot be required on the client", () => {
+    assertError(
+      (b) => b.yaml("bundle.yaml", (m) => { m.identifiers.push({ type: "din", label: "DIN", unique: false, appliesTo: "person", requiredWhen: true }); }),
+      /requiredWhen applies to client identifiers only/,
+    );
+  });
+});
+
 describe("field schemas and forms", () => {
   test("a custom keyword", () => {
     assertError((b) => b.json("schemas/client.json", (s) => { s.properties.constitution.widget = "select"; }), /keyword "widget" is not allowed/);
@@ -167,6 +183,13 @@ describe("field schemas and forms", () => {
 
   test("a remote $ref", () => {
     assertError((b) => b.json("schemas/client.json", (s) => { s.properties.extra = { $ref: "https://example.com/schema.json" }; }), /only local \$refs/);
+  });
+
+  test("an if that does not require what it tests is a warning", () => {
+    const result = lintBundle(variant((b) => b.json("schemas/client.json", (s) => { delete s.allOf[0].if.required; })));
+
+    assert.deepEqual(result.errors, []);
+    assert.match(result.warnings[0], /tests constitution without requiring it/);
   });
 
   test("a ui entry for a field that does not exist", () => {

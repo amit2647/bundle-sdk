@@ -8,7 +8,7 @@
   "required": ["constitution"],
   "allOf": [
     {
-      "if": { "properties": { "constitution": { "const": "pvt_ltd" } } },
+      "if": { "required": ["constitution"], "properties": { "constitution": { "const": "pvt_ltd" } } },
       "then": { "required": ["client_type"] }
     }
   ]

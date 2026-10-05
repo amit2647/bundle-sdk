@@ -1,6 +1,6 @@
 {
     "name": "bundle-sdk",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "The profession bundle contract: manifest schema, bundle-lint, and the condition, schedule and template engines shared by the installer and the capability services",
     "main": "src/index.js",
     "bin": {

@@ -71,8 +71,19 @@ function propertiesOf(schema) {
   return new Set(Object.keys((schema && schema.properties) || {}));
 }
 
-function checkFieldSchema(schema, where, errors) {
+function checkFieldSchema(schema, where, errors, warnings = []) {
   function walk(node, at) {
+    // An `if` testing a property it does not require also matches when the
+    // field is empty, so its `then` fires for everyone who left it blank.
+    if (node && typeof node === "object" && node.if && typeof node.if === "object" && node.if.properties) {
+      const required = new Set(node.if.required || []);
+      const unguarded = Object.keys(node.if.properties).filter((field) => !required.has(field));
+
+      if (unguarded.length > 0) {
+        warnings.push(`${at}.if: tests ${unguarded.join(", ")} without requiring it, so it also matches when that field is empty — add "required": ${JSON.stringify(unguarded)}`);
+      }
+    }
+
     if (Array.isArray(node)) {
       node.forEach((item, index) => walk(item, `${at}[${index}]`));
       return;
@@ -320,19 +331,27 @@ function lintManifest(manifest, { fixtures = [], previous = null } = {}) {
           errors.push(`profiles.engagement.${type}: there is no engagement type "${type}"`);
         }
 
-        checkFieldSchema(item.schema, `profiles.engagement.${type}.schema`, errors);
+        checkFieldSchema(item.schema, `profiles.engagement.${type}.schema`, errors, warnings);
         checkUi(item.ui, item.schema, `profiles.engagement.${type}.ui`, errors);
       }
 
       continue;
     }
 
-    checkFieldSchema(profile.schema, `profiles.${entity}.schema`, errors);
+    checkFieldSchema(profile.schema, `profiles.${entity}.schema`, errors, warnings);
     checkUi(profile.ui, profile.schema, `profiles.${entity}.ui`, errors);
   }
 
   // identifiers
   for (const identifier of list(manifest.identifiers)) {
+    for (const part of ["shownWhen", "requiredWhen"]) {
+      checkCondition(identifier[part], `identifiers.${identifier.type}.${part}`, { ...context, conditionRoots: ["client"] }, errors);
+    }
+
+    if (identifier.requiredWhen !== undefined && identifier.appliesTo === "person") {
+      errors.push(`identifiers.${identifier.type}: requiredWhen applies to client identifiers only`);
+    }
+
     if (identifier.pattern) {
       try {
         new RegExp(identifier.pattern);
@@ -414,7 +433,7 @@ function lintManifest(manifest, { fixtures = [], previous = null } = {}) {
     const inspected = templates.inspect(document.body);
 
     errors.push(...inspected.errors.map((error) => `${where}: ${error}`));
-    checkFieldSchema(document.fields, `${where}.fields`, errors);
+    checkFieldSchema(document.fields, `${where}.fields`, errors, warnings);
     checkUi(document.ui, document.fields, `${where}.ui`, errors);
     checkCondition(document.enabledWhen, `${where}.enabledWhen`, { ...context, conditionRoots: ["client", "engagement", "firm"] }, errors);
 

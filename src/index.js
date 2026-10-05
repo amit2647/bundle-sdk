@@ -6,6 +6,8 @@ const conditions = require("./conditions");
 const schedules = require("./schedules");
 const templates = require("./templates");
 const permissions = require("./permissions");
+const identifiers = require("./identifiers");
+const profiles = require("./profiles");
 
 /*
  * Loads and lints a bundle directory in one step: what bundle-lint runs, and
@@ -50,4 +52,6 @@ module.exports = {
   schedules,
   templates,
   permissions,
+  identifiers,
+  profiles,
 };
