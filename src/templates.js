@@ -326,4 +326,32 @@ function check(body, fieldsSchema) {
   return { errors, paths: inspected.paths };
 }
 
-module.exports = { inspect, check, compile, render, BINDING_ROOTS, HELPERS: Object.keys(KNOWN) };
+const ownValue = (object, key) => (object !== null && typeof object === "object" && Object.prototype.hasOwnProperty.call(object, key) ? object[key] : undefined);
+
+/*
+ * DOC-11: a document field can start from client data. The field's ui entry
+ * names where — { "fee": { "ui:prefill": "engagement.fee_total" } } — and
+ * this resolves every such path against the same context the template
+ * renders with. Paths read the binding roots only, never another field.
+ * Returns { field: value } for the values that exist.
+ */
+function prefill(ui, context) {
+  const values = {};
+
+  for (const [field, options] of Object.entries(ui || {})) {
+    const path = options && typeof options === "object" ? options["ui:prefill"] : undefined;
+
+    if (typeof path !== "string") continue;
+
+    const [root] = path.split(".");
+    if (!BINDING_ROOTS.includes(root) || root === "fields") continue;
+
+    const value = path.split(".").reduce((current, key) => ownValue(current, key), context);
+
+    if (value !== undefined && value !== null && value !== "") values[field] = value;
+  }
+
+  return values;
+}
+
+module.exports = { inspect, check, compile, render, prefill, BINDING_ROOTS, HELPERS: Object.keys(KNOWN) };

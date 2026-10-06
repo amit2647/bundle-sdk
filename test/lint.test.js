@@ -222,6 +222,19 @@ describe("documents", () => {
     assertError((b) => b.write("documents/engagement-letter/template.hbs", "{{fields.discount}}"), /"fields.discount" is not a field of this document/);
   });
 
+  test("active markup in a template", () => {
+    assertError((b) => b.write("documents/engagement-letter/template.hbs", "<p>{{client.name}}</p><script>alert(1)</script>"), /<script> is not allowed/);
+  });
+
+  test("a pre-filled field reading another field, or a client field that does not exist", () => {
+    assertError((b) => b.write("documents/engagement-letter/fields.ui.json", JSON.stringify({ fee: { "ui:prefill": "fields.reference" } })), /ui:prefill "fields.reference" must read one of/);
+    assertError((b) => b.write("documents/engagement-letter/fields.ui.json", JSON.stringify({ fee: { "ui:prefill": "client.turnover" } })), /clients have no field "turnover"/);
+  });
+
+  test("a pre-fill from the period's fees lints clean", () => {
+    assert.deepEqual(errorsOf((b) => b.write("documents/engagement-letter/fields.ui.json", JSON.stringify({ fee: { "ui:prefill": "engagement.fee_total" } }))), []);
+  });
+
   test("a binding root templates cannot read", () => {
     assertError((b) => b.write("documents/engagement-letter/template.hbs", "{{process.env.SECRET}}"), /templates can read/);
   });

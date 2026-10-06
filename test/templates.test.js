@@ -119,3 +119,19 @@ describe("check", () => {
     assert.deepEqual(check('<p style="text-align:right">{{date today}}</p><table><tr><td class="doc-favourable">Yes</td></tr></table>', fields).errors, []);
   });
 });
+
+describe("prefill (DOC-11)", () => {
+  const context = { engagement: { fee_total: 45000, attributes: { agm_on: "2026-09-30" } }, client: { name: "Acme" }, fields: { fee: 1 } };
+
+  test("resolves each field's ui:prefill path against the render context", () => {
+    const ui = { fee: { "ui:prefill": "engagement.fee_total" }, agm: { "ui:prefill": "engagement.attributes.agm_on" }, note: { "ui:widget": "textarea" } };
+
+    assert.deepEqual(require("../src/templates").prefill(ui, context), { fee: 45000, agm: "2026-09-30" });
+  });
+
+  test("skips missing values, other fields and paths outside the binding roots", () => {
+    const ui = { a: { "ui:prefill": "engagement.missing" }, b: { "ui:prefill": "fields.fee" }, c: { "ui:prefill": "process.env" }, d: { "ui:prefill": "client.constructor" } };
+
+    assert.deepEqual(require("../src/templates").prefill(ui, context), {});
+  });
+});

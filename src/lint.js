@@ -36,8 +36,12 @@ const FIELD_KEYWORDS = new Set([
 ]);
 
 // Generic columns a condition or template may read besides attributes.
-const CLIENT_FIELDS = new Set(["name", "company", "email", "phone", "address", "notes", "attributes", "identifiers", "people"]);
-const ENGAGEMENT_FIELDS = new Set(["period_label", "period_start", "period_end", "stage", "status", "appointment_on", "attributes", "lines", "type"]);
+// What a document (or a condition) can read on a client and an engagement.
+// document-service builds its render context with exactly these: `signatory`
+// is the client's authorised signatory (WIZ-05); `fee_total` and
+// `expenses_total` sum the period's lines (DOC-11); `services` names them.
+const CLIENT_FIELDS = new Set(["name", "company", "email", "phone", "address", "notes", "attributes", "identifiers", "people", "signatory"]);
+const ENGAGEMENT_FIELDS = new Set(["period_label", "period_start", "period_end", "stage", "status", "appointment_on", "attributes", "lines", "type", "fee_total", "expenses_total", "services"]);
 
 const EMAIL_ROOTS = {
   "lead.created": ["lead", "organization"],
@@ -436,6 +440,21 @@ function lintManifest(manifest, { fixtures = [], previous = null } = {}) {
     checkFieldSchema(document.fields, `${where}.fields`, errors, warnings);
     checkUi(document.ui, document.fields, `${where}.ui`, errors);
     checkCondition(document.enabledWhen, `${where}.enabledWhen`, { ...context, conditionRoots: ["client", "engagement", "firm"] }, errors);
+
+    // Pre-filled fields (DOC-11) read a binding root, never another field.
+    for (const [field, options] of Object.entries(document.ui || {})) {
+      const path = options && typeof options === "object" ? options["ui:prefill"] : undefined;
+
+      if (path === undefined) continue;
+
+      const root = typeof path === "string" ? path.split(".")[0] : "";
+
+      if (!templates.BINDING_ROOTS.includes(root) || root === "fields") {
+        errors.push(`${where}.ui.${field}: ui:prefill "${path}" must read one of ${templates.BINDING_ROOTS.filter((name) => name !== "fields").join(", ")}`);
+      } else if (["client", "engagement"].includes(root)) {
+        checkPath(path, `${where}.ui.${field}`, context, errors, templates.BINDING_ROOTS);
+      }
+    }
 
     // Roots and fields are checked above; client.* and engagement.* paths
     // also have to exist in the bundle's profile schemas.
