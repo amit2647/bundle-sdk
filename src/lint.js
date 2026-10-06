@@ -38,9 +38,10 @@ const FIELD_KEYWORDS = new Set([
 // Generic columns a condition or template may read besides attributes.
 // What a document (or a condition) can read on a client and an engagement.
 // document-service builds its render context with exactly these: `signatory`
-// is the client's authorised signatory (WIZ-05); `fee_total` and
-// `expenses_total` sum the period's lines (DOC-11); `services` names them.
-const CLIENT_FIELDS = new Set(["name", "company", "email", "phone", "address", "notes", "attributes", "identifiers", "people", "signatory"]);
+// is the client's authorised signatory (WIZ-05); `portals` lists the portals
+// it has credentials for (FIX-22); `fee_total` and `expenses_total` sum the
+// period's lines (DOC-11); `services` names them.
+const CLIENT_FIELDS = new Set(["name", "company", "email", "phone", "address", "notes", "attributes", "identifiers", "people", "signatory", "portals"]);
 const ENGAGEMENT_FIELDS = new Set(["period_label", "period_start", "period_end", "stage", "status", "appointment_on", "attributes", "lines", "type", "fee_total", "expenses_total", "services"]);
 
 const EMAIL_ROOTS = {

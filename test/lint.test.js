@@ -231,6 +231,10 @@ describe("documents", () => {
     assertError((b) => b.write("documents/engagement-letter/fields.ui.json", JSON.stringify({ fee: { "ui:prefill": "client.turnover" } })), /clients have no field "turnover"/);
   });
 
+  test("a document may list the client's portals (FIX-22)", () => {
+    assert.deepEqual(errorsOf((b) => b.write("documents/engagement-letter/template.hbs", "<p>{{client.name}}</p>{{#each client.portals}}<p>{{name}}</p>{{/each}}")), []);
+  });
+
   test("a pre-fill from the period's fees lints clean", () => {
     assert.deepEqual(errorsOf((b) => b.write("documents/engagement-letter/fields.ui.json", JSON.stringify({ fee: { "ui:prefill": "engagement.fee_total" } }))), []);
   });
