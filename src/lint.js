@@ -430,26 +430,18 @@ function lintManifest(manifest, { fixtures = [], previous = null } = {}) {
   // documents
   for (const document of list(manifest.documents)) {
     const where = `documents.${document.key}`;
-    const inspected = templates.inspect(document.body);
+    const checked = templates.check(document.body, document.fields);
 
-    errors.push(...inspected.errors.map((error) => `${where}: ${error}`));
+    errors.push(...checked.errors.map((error) => `${where}: ${error}`));
     checkFieldSchema(document.fields, `${where}.fields`, errors, warnings);
     checkUi(document.ui, document.fields, `${where}.ui`, errors);
     checkCondition(document.enabledWhen, `${where}.enabledWhen`, { ...context, conditionRoots: ["client", "engagement", "firm"] }, errors);
 
-    const documentFields = propertiesOf(document.fields);
-
-    for (const placeholder of inspected.paths) {
-      const [root, field] = placeholder.split(".");
-
-      if (root === "fields") {
-        if (field && !documentFields.has(field)) {
-          errors.push(`${where}: "${placeholder}" is not a field of this document`);
-        }
-      } else if (["client", "engagement"].includes(root)) {
+    // Roots and fields are checked above; client.* and engagement.* paths
+    // also have to exist in the bundle's profile schemas.
+    for (const placeholder of checked.paths) {
+      if (["client", "engagement"].includes(placeholder.split(".")[0])) {
         checkPath(placeholder, where, context, errors, templates.BINDING_ROOTS);
-      } else if (!templates.BINDING_ROOTS.includes(root)) {
-        errors.push(`${where}: "${placeholder}" — templates can read ${templates.BINDING_ROOTS.join(", ")}`);
       }
     }
   }

@@ -251,6 +251,11 @@ function wrapPlaceholders(program) {
 function compile(body) {
   const { errors, ast } = inspect(body);
 
+  for (const [pattern, message] of FORBIDDEN_MARKUP) {
+    const match = String(body).match(pattern);
+    if (match) errors.push(message(match));
+  }
+
   if (errors.length > 0) {
     throw new Error(`Invalid template: ${errors.join("; ")}`);
   }
@@ -274,4 +279,51 @@ function render(body, context, options) {
   return compile(body)(context, options);
 }
 
-module.exports = { inspect, compile, render, BINDING_ROOTS, HELPERS: Object.keys(KNOWN) };
+/*
+ * Markup a template may never contain. Values are escaped anyway; this keeps
+ * the bundle's (or a firm's) own HTML inert too, before it ever reaches a
+ * browser — the preview also renders in a sandboxed frame.
+ */
+const FORBIDDEN_MARKUP = [
+  [/<\s*(script|iframe|object|embed|link|meta|base|form|frame|frameset)\b/i, (match) => `<${match[1].toLowerCase()}> is not allowed`],
+  [/\son[a-z]+\s*=/i, () => "event-handler attributes (on…=) are not allowed"],
+  [/(?:javascript|vbscript)\s*:/i, () => "script URLs (javascript:) are not allowed"],
+  [/\bsrcdoc\s*=/i, () => "srcdoc attributes are not allowed"],
+];
+
+/*
+ * Everything that can be checked about a template from the template and its
+ * own field schema alone: it parses, uses only known helpers, escapes all
+ * output, contains no active markup, reads only the binding roots and only
+ * its own fields. bundle-lint runs it on every bundle document, and
+ * document-service on a firm's edited template — the same rules, from one
+ * place. (Lint additionally checks client.* and engagement.* paths against
+ * the bundle's profile schemas.)
+ */
+function check(body, fieldsSchema) {
+  const inspected = inspect(body);
+  const errors = [...inspected.errors];
+  const fields = new Set(Object.keys((fieldsSchema && fieldsSchema.properties) || {}));
+
+  for (const [pattern, message] of FORBIDDEN_MARKUP) {
+    const match = String(body).match(pattern);
+
+    if (match) {
+      errors.push(message(match));
+    }
+  }
+
+  for (const placeholder of inspected.paths) {
+    const [root, field] = placeholder.split(".");
+
+    if (!BINDING_ROOTS.includes(root)) {
+      errors.push(`"${placeholder}" — templates can read ${BINDING_ROOTS.join(", ")}`);
+    } else if (root === "fields" && field && !fields.has(field)) {
+      errors.push(`"${placeholder}" is not a field of this document`);
+    }
+  }
+
+  return { errors, paths: inspected.paths };
+}
+
+module.exports = { inspect, check, compile, render, BINDING_ROOTS, HELPERS: Object.keys(KNOWN) };

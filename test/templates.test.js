@@ -1,7 +1,7 @@
 const { describe, test } = require("node:test");
 const assert = require("node:assert/strict");
 
-const { inspect, render, compile } = require("../src/templates");
+const { check, inspect, render, compile } = require("../src/templates");
 
 describe("inspect", () => {
   test("accepts the whitelisted helpers and lists top-level placeholders", () => {
@@ -85,5 +85,37 @@ describe("render", () => {
 
   test("prototype properties are not reachable", () => {
     assert.equal(render("{{client.constructor}}", { client: {} }).includes("function"), false);
+  });
+});
+
+describe("check", () => {
+  const fields = { type: "object", properties: { reference: { type: "string" }, fee: { type: "number" } } };
+
+  test("accepts a template that reads the binding roots and its own fields", () => {
+    assert.deepEqual(check("<p>{{client.name}} · {{fields.reference}} · {{money fields.fee}} · {{date today}}</p>", fields).errors, []);
+  });
+
+  test("refuses fields the document does not have, and roots templates cannot read", () => {
+    const { errors } = check("{{fields.unknown}} {{process.env}}", fields);
+
+    assert.ok(errors.some((error) => /fields.unknown" is not a field/.test(error)));
+    assert.ok(errors.some((error) => /"process.env" — templates can read/.test(error)));
+  });
+
+  test("refuses active markup in the template itself", () => {
+    for (const body of [
+      "<script>alert(1)</script>",
+      '<img src="x" onerror="alert(1)">',
+      '<a href="javascript:alert(1)">x</a>',
+      "<iframe></iframe>",
+      '<form action="/x"></form>',
+    ]) {
+      assert.ok(check(body, fields).errors.length > 0, body);
+      assert.throws(() => compile(body), /Invalid template/, body);
+    }
+  });
+
+  test("ordinary letter markup and inline styles pass", () => {
+    assert.deepEqual(check('<p style="text-align:right">{{date today}}</p><table><tr><td class="doc-favourable">Yes</td></tr></table>', fields).errors, []);
   });
 });
