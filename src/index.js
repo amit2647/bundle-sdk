@@ -1,7 +1,7 @@
 const path = require("path");
 
 const { loadBundle } = require("./load");
-const { lintManifest, classifyChange } = require("./lint");
+const { lintManifest, classifyChange, checkRule } = require("./lint");
 const conditions = require("./conditions");
 const schedules = require("./schedules");
 const templates = require("./templates");
@@ -48,6 +48,7 @@ module.exports = {
   lintBundle,
   lintManifest,
   classifyChange,
+  checkRule,
   conditions,
   schedules,
   templates,

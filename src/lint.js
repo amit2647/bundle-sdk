@@ -678,4 +678,76 @@ function checkVersion(previous, next, errors) {
   }
 }
 
-module.exports = { lintManifest, classifyChange };
+// One deadline rule on its own: the checks lintManifest runs on a bundle's
+// rules, for a rule a firm writes in the app (obligation-service). The same
+// contract, the same condition check and the same one-year dry run, so a rule
+// saved in the app is as sound as one a bundle ships.
+//   services          the organization's service keys (a rule's own and any
+//                     its condition names must be among them)
+//   periodKind, periodStartMonth   the engagement type the dry run uses
+const validateRule = ajv.compile({ $defs: contractSchema.$defs, $ref: "#/$defs/rule" });
+
+function checkRule(rule, { services = [], periodKind = "financial_year", periodStartMonth = 4 } = {}) {
+  const errors = [];
+
+  if (!validateRule(rule)) {
+    for (const error of validateRule.errors) {
+      errors.push(`${error.instancePath || "rule"} ${error.message}${error.params && error.params.additionalProperty ? ` ("${error.params.additionalProperty}")` : ""}`);
+    }
+
+    return { errors };
+  }
+
+  const known = new Set(services);
+
+  if (!known.has(rule.service)) {
+    errors.push(`service "${rule.service}" is not in the catalog`);
+  }
+
+  if (rule.schedule && rule.schedule.dates && rule.frequency !== "quarterly") {
+    errors.push('per-quarter dates need frequency "quarterly"');
+  }
+
+  checkCondition(rule.condition, "condition", {
+    services: known,
+    clientFields: new Set(),
+    engagementFields: new Set(),
+    identifierTypes: new Set(),
+    conditionRoots: ["client", "engagement"],
+  }, errors);
+
+  if (errors.length > 0 || rule.kind !== "periodic") {
+    return { errors };
+  }
+
+  // Dry run for this year, with the condition both met and not met.
+  const period = schedules.periodFor(schedules.todayIn("UTC"), { periodKind, periodStartMonth });
+
+  for (const engaged of [[rule.service], [...known]]) {
+    let items;
+
+    try {
+      items = schedules.generate(rule, period, { client: {}, engagement: {}, engaged });
+    } catch (error) {
+      errors.push(error.message);
+      continue;
+    }
+
+    const keys = new Set();
+
+    for (const item of items) {
+      if (keys.has(item.periodKey)) errors.push(`two deadlines for ${item.periodKey}`);
+      keys.add(item.periodKey);
+
+      if (!schedules.isDate(item.dueOn)) {
+        errors.push(`${item.periodKey} has an invalid due date "${item.dueOn}"`);
+      } else if (item.periodStart && item.dueOn < item.periodStart) {
+        errors.push(`${item.periodKey} would be due (${item.dueOn}) before its period starts`);
+      }
+    }
+  }
+
+  return { errors: [...new Set(errors)] };
+}
+
+module.exports = { lintManifest, classifyChange, checkRule };
